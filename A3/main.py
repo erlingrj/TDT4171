@@ -14,12 +14,11 @@ class TreeNode:
     children = []
     label = None
     branch = ''
-    
-    def __init__(self,parent, children, label):
+
+    def __init__(self,parent, label):
         self.parent = parent
-        self.children.append(children)
         self.label = label
-    
+
     def get_parent(self):
         return self.parent
 
@@ -39,7 +38,7 @@ class TreeNode:
         self_label = label
     def set_branch(self, branch):
         self_branch = branch
-        
+
 
 
 def importance_random(examples, attribute):
@@ -56,7 +55,7 @@ def readAndParse(filename):
     # Read all numbers into an array of arrays. Also convert the values to ints.
     line = f.readline()
     while line != '':
-        data.append(map(int, line.strip('\n').split('\t'))) 
+        data.append(map(int, line.strip('\n').split('\t')))
         line = f.readline()
 
     return data
@@ -65,7 +64,7 @@ def plurality_classification(examples):
     #Function for finding the most commen classification among a set of examples
     if len(examples) == 0:
         return -1
-    
+
     cat_1 = 0
     cat_2 = 0
     for ex in examples:
@@ -93,28 +92,28 @@ def all_equal_classification(examples):
             return 0
 
     return classification
-    
+
 
 def decision_tree_learning(examples, attributes, parent_examples):
 
     all_equal_class = all_equal_classification(examples)
-    
+
     if len(examples) == 0:
 
         label = plurality_classification(parent_examples)
-        tree = TreeNode(parent=None, children = None, label = label)
+        tree = TreeNode(parent=None, label = label)
         return tree
-    
+
     elif all_equal_class > 0:
 
-        tree= TreeNode(parent=None, children = None, label = all_equal_class)
+        tree= TreeNode(parent=None, label = all_equal_class)
         return tree
 
     elif len(attributes) == 0:
         label = plurality_classification(examples)
-        tree = TreeNode(parent=None, children = None, label = label)
+        tree = TreeNode(parent=None, label = label)
         return tree
-        
+
 
     else:
         # Find most important attribute
@@ -127,8 +126,9 @@ def decision_tree_learning(examples, attributes, parent_examples):
                 most_important_attr = attr
 
         A = most_important_attr
-        tree = TreeNode(parent=None, children = None, label = str(A))
+        tree = TreeNode(parent=None, label = str(A))
 
+        # LES HERIFRA
         for value in VALUES:
             exs = []
             for ex in examples:
@@ -137,26 +137,22 @@ def decision_tree_learning(examples, attributes, parent_examples):
 
             if len(exs) > 0:
                 attributes.remove(A)
-        
                 sub_tree = decision_tree_learning(exs,attributes,examples)
 
+                sub_tree.add_parent(tree)
+                tree.add_child(sub_tree)
 
-            
                 branch = str(A) + "=" + str(value)
                 sub_tree.set_branch(branch)
-                tree.add_child(sub_tree)
-                return tree
-            
+
+        return tree
+
+        # TIL HIT: NOE ER FEIL.
+
 
 
 def print_tree(tree):
-    if tree.get_children() == []:
-       print "pk"
-
-    else:
-        for child in tree.get_children()
-
-
+    print('heu')
 
 
 
@@ -165,20 +161,6 @@ if __name__ == '__main__':
     examples = readAndParse(TRAINING_DATA)
     attributes = ATTRIBUTES
 
-    print attributes
-
     final_tree = decision_tree_learning(examples,attributes, [])
 
-
-    print parent
-
-    
-    
-            
-        
-        
-        
-        
-
-
-
+    print_tree(final_tree)
