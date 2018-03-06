@@ -126,24 +126,34 @@ def decision_tree_learning(examples, attributes, parent_examples):
                 most_important_attr = attr
 
         A = most_important_attr
+    
         tree = TreeNode(parent=None, label = str(A))
 
         # LES HERIFRA
         for value in VALUES:
-            exs = []
+            exs_ = []
             for ex in examples:
                 if ex[A] == value:
                     exs.append(ex)
 
-            if len(exs) > 0:
-                attributes.remove(A)
-                sub_tree = decision_tree_learning(exs,attributes,examples)
+            print("A: ", A)
+            print("value: ",value)
+            print("Number of examples: ", len(examples), len(exs))
+            
+            new_attributes = attributes[:]
+            new_attributes.remove(A)
+            print("remaining attributes: ", new_attributes)
+            print('\n')
+                
+            sub_tree = decision_tree_learning(exs,new_attributes,examples)
 
-                sub_tree.add_parent(tree)
-                tree.add_child(sub_tree)
+            sub_tree.add_parent(tree)
+            tree.add_child(sub_tree)
 
-                branch = str(A) + "=" + str(value)
-                sub_tree.set_branch(branch)
+            branch = str(A) + "=" + str(value)
+            sub_tree.set_branch(branch)
+
+        attributes.remove(A)
 
         return tree
 
@@ -152,7 +162,9 @@ def decision_tree_learning(examples, attributes, parent_examples):
 
 
 def print_tree(tree):
-    print('heu')
+    print(tree)
+    print(tree.children[0])
+    print(tree.children[0].children[0])
 
 
 
