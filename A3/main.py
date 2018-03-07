@@ -11,7 +11,7 @@ ATTRIBUTES = [x for x in range(0,N_ATTR)]
 class TreeNode:
     # A simple tree class.
     parent = None
-    children = []
+    children = {}
     label = None
     branch = ''
 
@@ -126,36 +126,30 @@ def decision_tree_learning(examples, attributes, parent_examples):
                 most_important_attr = attr
 
         A = most_important_attr
-    
-        tree = TreeNode(parent=None, label = str(A))
+        tree = TreeNode(parent=None, label = A)
+        print("Tree created: ", tree)
+        attributes.remove(A)
 
         # LES HERIFRA
         for value in VALUES:
-            exs_ = []
+            print(attributes)
+            exs = []
             for ex in examples:
                 if ex[A] == value:
                     exs.append(ex)
 
-            print("A: ", A)
-            print("value: ",value)
-            print("Number of examples: ", len(examples), len(exs))
-            
-            new_attributes = attributes[:]
-            new_attributes.remove(A)
-            print("remaining attributes: ", new_attributes)
             print('\n')
                 
-            sub_tree = decision_tree_learning(exs,new_attributes,examples)
-
-            sub_tree.add_parent(tree)
-            tree.add_child(sub_tree)
+            sub_tree = decision_tree_learning(exs,list(attributes),examples)
+            tree.children[value] = sub_tree
+            print(len(tree.children))
+            
+            
 
             branch = str(A) + "=" + str(value)
             sub_tree.set_branch(branch)
 
-        attributes.remove(A)
-
-        return tree
+    return tree
 
         # TIL HIT: NOE ER FEIL.
 
@@ -169,8 +163,9 @@ def print_tree(tree):
 
 
 if __name__ == '__main__':
+    print("************************************************************************************")
 
-    examples = readAndParse(TRAINING_DATA)
+    examples = readAndParse(TEST_DATA)
     attributes = ATTRIBUTES
 
     final_tree = decision_tree_learning(examples,attributes, [])
