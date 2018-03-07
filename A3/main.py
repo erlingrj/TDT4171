@@ -10,14 +10,12 @@ ATTRIBUTES = [x for x in range(0,N_ATTR)]
 
 class TreeNode:
     # A simple tree class.
-    parent = None
-    children = {}
-    label = None
-    branch = ''
 
     def __init__(self,parent, label):
         self.parent = parent
         self.label = label
+        self.children = []
+        self.branch = ''
 
     def get_parent(self):
         return self.parent
@@ -55,7 +53,11 @@ def readAndParse(filename):
     # Read all numbers into an array of arrays. Also convert the values to ints.
     line = f.readline()
     while line != '':
-        data.append(map(int, line.strip('\n').split('\t')))
+        line = line.strip('\n').split('\t')
+        for i in range(0,len(line)):
+            line[i] = int(line[i])
+        
+        data.append(line)
         line = f.readline()
 
     return data
@@ -127,27 +129,24 @@ def decision_tree_learning(examples, attributes, parent_examples):
 
         A = most_important_attr
         tree = TreeNode(parent=None, label = A)
-        print("Tree created: ", tree)
         attributes.remove(A)
 
         # LES HERIFRA
         for value in VALUES:
-            print(attributes)
             exs = []
             for ex in examples:
                 if ex[A] == value:
                     exs.append(ex)
-
-            print('\n')
                 
             sub_tree = decision_tree_learning(exs,list(attributes),examples)
-            tree.children[value] = sub_tree
-            print(len(tree.children))
+            branch = str(A) + "=" + str(value)
+            sub_tree.set_branch(branch)
+            tree.add_child(sub_tree)
             
             
 
-            branch = str(A) + "=" + str(value)
-            sub_tree.set_branch(branch)
+
+            
 
     return tree
 
@@ -155,10 +154,17 @@ def decision_tree_learning(examples, attributes, parent_examples):
 
 
 
-def print_tree(tree):
-    print(tree)
-    print(tree.children[0])
-    print(tree.children[0].children[0])
+def print_tree(tree, level):
+    if tree.get_children() == []:
+        print("Label: ", tree.label, "Branch: ", tree.branch, end='\t')
+
+    else:
+        children = tree.get_children()
+        for child in children:
+            print_tree(child, level)
+
+        print('')
+
 
 
 
@@ -169,5 +175,5 @@ if __name__ == '__main__':
     attributes = ATTRIBUTES
 
     final_tree = decision_tree_learning(examples,attributes, [])
-
-    print_tree(final_tree)
+    level = 0
+    print_tree(final_tree,level)
