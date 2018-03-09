@@ -32,6 +32,10 @@ class TreeNode:
     def set_classification(self, classi):
         self.classification = classi
 
+def importance_random(attributes):
+    return attributes[randint(0,len(attributes)-1)]
+
+
 def B(q):
     if q == 1.0:
         return 0
@@ -40,44 +44,56 @@ def B(q):
     else:
         return -q*log(q,2) - (1.0-q)*log((1.0-q),2)
 
-def importance_random(attributes):
-    return attributes[randint(0,len(attributes)-1)]
-
-
-def target_entropy(examples):
-    if len(examples) == 0:
-        return 0
-    n = float(len(examples))
+def entropy(data):
     p = 0
-    for exs in examples:
-        if exs[N_ATTR+1] == 1:
-            p += 1
-    print("pos/tot",p,n)
-    return B(p/n)
-             
+    n = float(len(data))
 
-def entropy(examples, attr):
+    if n==0:
+        return 0
+
+    for exs in data:
+        if exs[N_ATTR] == 2:
+            p += 1
+
+    print(p,n)
+    return B(p/n)
+            
+
+
+def entropy_attr(data, target_attr):
+    """
+    Calculates the entropy of the given data set for the target attribute.
+    """
     l1 = []
     l2 = []
-    n = float(len(examples))
-    for exs in examples:
-        if exs[attr] == 1:
-            l1.append(exs)
-        else:
-            l2.append(exs)
-    print("Attr", attr)
-    print("L1: ", end='')
-    entropy_l1 = (len(l1)/n) * target_entropy(l1)
-    print("L2: ", end='')
-    entropy_l2 = (len(l2)/n) * target_entropy(l2)
 
+
+    # Calculate the frequency of each of the values in the target attr
+
+    for exs in data:
+        if exs[target_attr] == 1:
+            l1.append(exs)
+        elif exs[target_attr] == 2:
+            l2.append(exs)
+
+    print(l1,l2)
+    entropy_l1 = (len(l1)/len(data))*entropy(l1)
+    entropy_l2 = (len(l2)/len(data))*entropy(l2)
+
+        
     return entropy_l1 + entropy_l2
 
-def importance_entropy(examples, attributes):
-    attribute_gain = [-1] * N_ATTR
-    goal = target_entropy(examples)
+def gain(data, attributes):
+    """
+    Calculates the information gain (reduction in entropy) that would
+    result by splitting the data on the chosen attribute (attr).
+    """
+    target_entropy = entropy(data)
+    attribute_gain = [-1] * N_ATTR 
     for attr in attributes:
-        attribute_gain[attr] = goal - entropy(examples, attr)
+        attribute_gain[attr] = target_entropy - entropy_attr(data, attr)
+
+
     index = 0
     value = -1
     print(attribute_gain)
@@ -87,6 +103,25 @@ def importance_entropy(examples, attributes):
             value = attribute_gain[attr]
     return index
         
+    
+        
+    
+def importance_entropy(examples, attributes):
+    attribute_gain = [-1] * N_ATTR
+
+    for attr in attributes:
+        attribute_gain[attr] = gain(examples,attributes)
+
+
+    print("Gains: ", attribute_gain)
+
+    val = -1
+    index = 0
+    for i in range(0,N_ATTR-1):
+        if attribute_gain[i]>val:
+            val = attribute_gain[i]
+            index = i
+    return i
 
 def readAndParse(filename):
     # Read training data
@@ -115,9 +150,9 @@ def plurality_classification(examples):
     cat_1 = 0
     cat_2 = 0
     for ex in examples:
-        if ex[N_ATTR+1] == 1:
+        if ex[N_ATTR] == 1:
             cat_1 = cat_1 + 1
-        elif ex[N_ATTR+1] == 2:
+        elif ex[N_ATTR] == 2:
             cat_2 = cat_2 + 1
 
     # Return the most commen classification:
@@ -132,14 +167,13 @@ def all_equal_classification(examples):
         return -1
 
     ex = examples[0]
-    classification = ex[N_ATTR+1]
+    classification = ex[N_ATTR]
 
     for ex in examples:
-        if ex[N_ATTR+1] != classification:
+        if ex[N_ATTR] != classification:
             return 0
 
     return classification
-
 
 
 
@@ -153,7 +187,6 @@ def decision_tree_learning(examples, attributes, parent_examples, importance):
         return TreeNode(-1, classification)
 
     elif all_equal_class > 0:
-        print("all equal", all_equal_class)
         return TreeNode(-1, all_equal_class)
 
     elif len(attributes) == 0:
@@ -164,28 +197,19 @@ def decision_tree_learning(examples, attributes, parent_examples, importance):
     else:
         print(attributes)
         if importance:
-            A = importance_entropy(examples, attributes)
+            A = gain(examples, attributes)
         else:
             A = importance_random(attributes)
-        print(A)
+        print("Choosen attribute: ",A)
         tree = TreeNode(A, -1)
         attributes.remove(A)
         
         for value in VALUES:
             exs = []
             for ex in examples:
-                print(ex)
-                print(ex[A])
-                print("value", value)
                 if ex[A] == value:
-                    print("check")
                     exs.append(ex)
-            
-
-            print("HASDOSAKLJDAKLJSADKJLSD")
-            print(exs)
-            print(list(attributes))
-            print(importance)
+                
             sub_tree = decision_tree_learning(exs,list(attributes),examples, importance)
             if sub_tree != None: 
                 sub_tree.set_classification(value)
@@ -252,7 +276,7 @@ def runTest(testData, decision_tree):
     results= [0, 0]
     for examples in testData:
         results[0] += 1
-        if classify(decision_tree,examples) == examples[N_ATTR+1]:
+        if classify(decision_tree,examples) == examples[N_ATTR]:
             results[1] += 1
 
 
